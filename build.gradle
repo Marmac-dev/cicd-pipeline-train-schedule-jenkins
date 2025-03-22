@@ -11,6 +11,15 @@ node {
 
 //declare a build task
 task build
+// Créer le dossier dist avant d'exécuter la tâche zip
+task createDistFolder {
+    doLast {
+        file("dist").mkdirs()
+    }
+}
+
+// Modifier la tâche zip pour dépendre de createDistFolder
+zip.dependsOn createDistFolder
 
 //declare a task to create a zip of the app
 task zip(type: Zip) {
@@ -27,23 +36,6 @@ task zip(type: Zip) {
 	baseName "trainSchedule"
 }
 
-//declare task dependencies
-build.dependsOn zip
-zip.dependsOn npm_build
-npm_build.dependsOn npm_test
-npm_test.dependsOn npmInstall
-npm_build.dependsOn npmInstall
-
-// Créer le dossier dist avant d'exécuter la tâche zip
-task createDistFolder {
-    doLast {
-        file("dist").mkdirs()
-    }
-}
-
-// Modifier la tâche zip pour dépendre de createDistFolder
-zip.dependsOn createDistFolder
-
 // Définir les tâches npm si elles n'existent pas
 task npmInstall(type: Exec) {
     commandLine "npm", "install"
@@ -56,4 +48,17 @@ task npm_test(type: Exec) {
 task npm_build(type: Exec) {
     commandLine "npm", "run", "build"
 }
+
+
+//declare task dependencies
+build.dependsOn zip
+zip.dependsOn npm_build
+npm_build.dependsOn npm_test
+npm_test.dependsOn npmInstall
+npm_build.dependsOn npmInstall
+
+
+
+
+
 
