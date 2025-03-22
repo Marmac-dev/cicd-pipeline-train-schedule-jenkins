@@ -1,16 +1,13 @@
 plugins {
-  //inlude the nodeJS plugin to execute nodejs and npm tasks
-  id "com.moowork.node" version "1.2.0"
+    id "com.moowork.node" version "1.2.0"
 }
 
 node {
-	download = true
-	version = "9.11.1"
-	npmVersion = "5.6.0"
+    download = true
+    version = "9.11.1"
+    npmVersion = "5.6.0"
 }
 
-//declare a build task
-task build
 // Créer le dossier dist avant d'exécuter la tâche zip
 task createDistFolder {
     doLast {
@@ -18,47 +15,42 @@ task createDistFolder {
     }
 }
 
-// Modifier la tâche zip pour dépendre de createDistFolder
-zip.dependsOn createDistFolder
-
-//declare a task to create a zip of the app
+// Déclarer la tâche zip AVEC la dépendance correcte
 task zip(type: Zip) {
-	from ('.') {
-		include "*"
-		include "bin/**"
-		include "data/**"
-		include "node_modules/**"
-		include "public/**"
-		include "routes/**"
-		include "views/**"
-	}
-	destinationDir(file("dist"))
-	baseName "trainSchedule"
+    dependsOn createDistFolder // Assurer que le dossier existe
+
+    from ('.') {
+        include "*"
+        include "bin/**"
+        include "data/**"
+        include "node_modules/**"
+        include "public/**"
+        include "routes/**"
+        include "views/**"
+    }
+    destinationDirectory = file("dist")
+    archiveBaseName.set("trainSchedule")
 }
 
-// Définir les tâches npm si elles n'existent pas
+// Définir les tâches npm
 task npmInstall(type: Exec) {
     commandLine "npm", "install"
 }
 
 task npm_test(type: Exec) {
+    dependsOn npmInstall
     commandLine "npm", "test"
 }
 
 task npm_build(type: Exec) {
+    dependsOn npm_test
     commandLine "npm", "run", "build"
 }
 
+// Déclarer une tâche build qui exécute correctement les étapes
+task build {
+    dependsOn zip
+}
 
-//declare task dependencies
-build.dependsOn zip
 zip.dependsOn npm_build
-npm_build.dependsOn npm_test
-npm_test.dependsOn npmInstall
 npm_build.dependsOn npmInstall
-
-
-
-
-
-
