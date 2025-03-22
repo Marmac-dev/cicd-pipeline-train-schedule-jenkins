@@ -1,11 +1,11 @@
 plugins {
-    id "com.moowork.node" version "1.2.0"
+    id "com.github.node-gradle.node" version "7.0.1"
 }
 
 node {
     download = true
-    version = "9.11.1"
-    npmVersion = "5.6.0"
+    version = "20.11.1"  // Dernière version stable en 2024
+    npmVersion = "10.2.3"
 }
 
 // Créer le dossier dist avant d'exécuter la tâche zip
@@ -15,10 +15,27 @@ task createDistFolder {
     }
 }
 
-// Déclarer la tâche zip AVEC la dépendance correcte
-task zip(type: Zip) {
-    dependsOn createDistFolder // Assurer que le dossier existe
+// Définir les tâches npm avec Gradle
+task npmInstall(type: Exec) {
+    commandLine "npm", "install"
+    outputs.upToDateWhen { false }
+}
 
+task npm_test(type: Exec) {
+    dependsOn npmInstall
+    commandLine "npm", "test"
+    outputs.upToDateWhen { false }
+}
+
+task npm_build(type: Exec) {
+    dependsOn npm_test
+    commandLine "npm", "run", "build"
+    outputs.upToDateWhen { false }
+}
+
+// Tâche de compression en ZIP
+task zip(type: Zip) {
+    dependsOn createDistFolder
     from ('.') {
         include "*"
         include "bin/**"
@@ -29,25 +46,10 @@ task zip(type: Zip) {
         include "views/**"
     }
     destinationDirectory = file("dist")
-    archiveBaseName.set("trainSchedule")
+    archiveFileName.set("trainSchedule.zip")
 }
 
-// Définir les tâches npm
-task npmInstall(type: Exec) {
-    commandLine "npm", "install"
-}
-
-task npm_test(type: Exec) {
-    dependsOn npmInstall
-    commandLine "npm", "test"
-}
-
-task npm_build(type: Exec) {
-    dependsOn npm_test
-    commandLine "npm", "run", "build"
-}
-
-// Déclarer une tâche build qui exécute correctement les étapes
+// Tâche de build principale
 task build {
     dependsOn zip
 }
